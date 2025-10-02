@@ -14,6 +14,7 @@ interface AgentGridProps {
   onCreateAgent: () => void
   onEditAgent: (agent: Agent) => void
   onDeleteAgent: (agentId: string) => void
+  onSuspendAgent: (agentId: string) => void
   onAssignTask: (agentId: string) => void
 }
 
@@ -22,6 +23,7 @@ export function AgentGrid({
   onCreateAgent, 
   onEditAgent, 
   onDeleteAgent, 
+  onSuspendAgent,
   onAssignTask 
 }: AgentGridProps) {
   const [searchQuery, setSearchQuery] = useState('')
@@ -119,6 +121,7 @@ export function AgentGrid({
               agent={agent}
               onEdit={onEditAgent}
               onDelete={onDeleteAgent}
+              onSuspend={onSuspendAgent}
               onAssignTask={onAssignTask}
               currentTaskTitle={getCurrentTaskTitle(agent)}
             />

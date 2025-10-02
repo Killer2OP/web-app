@@ -11,6 +11,7 @@ import {
   Clock, 
   CheckCircle, 
   AlertCircle,
+  Pause,
   MoreHorizontal,
   Edit,
   Trash2,
@@ -22,6 +23,7 @@ interface AgentCardProps {
   agent: Agent
   onEdit: (agent: Agent) => void
   onDelete: (agentId: string) => void
+  onSuspend: (agentId: string) => void
   onAssignTask: (agentId: string) => void
   currentTaskTitle?: string
 }
@@ -42,6 +44,11 @@ const statusConfig = {
     color: 'text-warning', 
     badge: 'bg-warning/10 text-warning border-warning/20' 
   },
+  suspended: { 
+    icon: Pause, 
+    color: 'text-muted-foreground', 
+    badge: 'bg-muted/10 text-muted-foreground border-muted/20' 
+  },
 }
 
 const typeConfig = {
@@ -56,6 +63,7 @@ export function AgentCard({
   agent, 
   onEdit, 
   onDelete, 
+  onSuspend,
   onAssignTask, 
   currentTaskTitle 
 }: AgentCardProps) {
@@ -100,6 +108,28 @@ export function AgentCard({
                     <Edit className="h-3 w-3 mr-2" />
                     Edit
                   </Button>
+                  {agent.status === 'working' && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onSuspend(agent.id)}
+                      className="w-full justify-start text-warning hover:text-warning/80"
+                    >
+                      <Pause className="h-3 w-3 mr-2" />
+                      Suspend
+                    </Button>
+                  )}
+                  {agent.status === 'suspended' && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onEdit(agent)}
+                      className="w-full justify-start text-success hover:text-success/80"
+                    >
+                      <Play className="h-3 w-3 mr-2" />
+                      Resume
+                    </Button>
+                  )}
                   <Button
                     variant="ghost"
                     size="sm"
@@ -180,6 +210,12 @@ export function AgentCard({
               <Play className="h-3 w-3 mr-1" />
               Assign Task
             </Button>
+          )}
+          
+          {agent.status === 'suspended' && (
+            <div className="text-xs text-muted-foreground text-center p-2 bg-muted/50 rounded-md">
+              Agent is suspended. Edit to resume.
+            </div>
           )}
         </CardContent>
       </Card>

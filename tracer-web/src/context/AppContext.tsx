@@ -42,6 +42,8 @@ type AppAction =
   | { type: 'DELETE_TASK'; payload: { projectId: string; taskId: string } }
   | { type: 'CREATE_AGENT'; payload: { projectId: string; agent: Agent } }
   | { type: 'UPDATE_AGENT'; payload: { projectId: string; agentId: string; updates: Partial<Agent> } }
+  | { type: 'DELETE_AGENT'; payload: { projectId: string; agentId: string } }
+  | { type: 'SUSPEND_AGENT'; payload: { projectId: string; agentId: string } }
   | { type: 'ASSIGN_TASK'; payload: { projectId: string; taskId: string; agentId: string } }
   | { type: 'CREATE_PLANNING_SESSION'; payload: PlanningSession }
   | { type: 'SET_CURRENT_SESSION'; payload: PlanningSession }
@@ -187,6 +189,78 @@ function appReducer(state: AppState, action: AppAction): AppState {
                 agent.id === action.payload.agentId
                   ? { ...agent, ...action.payload.updates }
                   : agent
+              ),
+            }
+          : state.currentProject,
+      }
+
+    case 'DELETE_AGENT':
+      return {
+        ...state,
+        // Remove agent from projects array
+        projects: state.projects.map(project =>
+          project.id === action.payload.projectId
+            ? {
+                ...project,
+                agents: project.agents.filter(agent => agent.id !== action.payload.agentId),
+                // Also unassign any tasks that were assigned to this agent
+                tasks: project.tasks.map(task =>
+                  task.agentId === action.payload.agentId
+                    ? { ...task, agentId: undefined, status: 'pending' as const }
+                    : task
+                ),
+              }
+            : project
+        ),
+        // Update current project if it matches
+        currentProject: state.currentProject?.id === action.payload.projectId
+          ? {
+              ...state.currentProject,
+              agents: state.currentProject.agents.filter(agent => agent.id !== action.payload.agentId),
+              tasks: state.currentProject.tasks.map(task =>
+                task.agentId === action.payload.agentId
+                  ? { ...task, agentId: undefined, status: 'pending' as const }
+                  : task
+              ),
+            }
+          : state.currentProject,
+      }
+
+    case 'SUSPEND_AGENT':
+      return {
+        ...state,
+        // Update agent status to suspended and clear current task
+        projects: state.projects.map(project =>
+          project.id === action.payload.projectId
+            ? {
+                ...project,
+                agents: project.agents.map(agent =>
+                  agent.id === action.payload.agentId
+                    ? { ...agent, status: 'suspended' as const, currentTaskId: undefined }
+                    : agent
+                ),
+                // Set any tasks assigned to this agent back to pending
+                tasks: project.tasks.map(task =>
+                  task.agentId === action.payload.agentId && task.status === 'in-progress'
+                    ? { ...task, status: 'pending' as const }
+                    : task
+                ),
+              }
+            : project
+        ),
+        // Update current project if it matches
+        currentProject: state.currentProject?.id === action.payload.projectId
+          ? {
+              ...state.currentProject,
+              agents: state.currentProject.agents.map(agent =>
+                agent.id === action.payload.agentId
+                  ? { ...agent, status: 'suspended' as const, currentTaskId: undefined }
+                  : agent
+              ),
+              tasks: state.currentProject.tasks.map(task =>
+                task.agentId === action.payload.agentId && task.status === 'in-progress'
+                  ? { ...task, status: 'pending' as const }
+                  : task
               ),
             }
           : state.currentProject,

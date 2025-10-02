@@ -50,7 +50,7 @@ export interface Agent {
   /** Type of agent defining their specialization */
   type: 'frontend' | 'backend' | 'fullstack' | 'devops' | 'ai'
   /** Current availability status */
-  status: 'idle' | 'working' | 'busy'
+  status: 'idle' | 'working' | 'busy' | 'suspended'
   /** ID of the task currently being worked on (optional) */
   currentTaskId?: string
   /** Array of skills/technologies the agent is proficient in */

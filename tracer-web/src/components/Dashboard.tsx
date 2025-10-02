@@ -118,7 +118,13 @@ export function Dashboard() {
 
   const handleDeleteAgent = (agentId: string) => {
     if (currentProject) {
-      dispatch({ type: 'UPDATE_AGENT', payload: { projectId: currentProject.id, agentId, updates: { status: 'idle' } } })
+      dispatch({ type: 'DELETE_AGENT', payload: { projectId: currentProject.id, agentId } })
+    }
+  }
+
+  const handleSuspendAgent = (agentId: string) => {
+    if (currentProject) {
+      dispatch({ type: 'SUSPEND_AGENT', payload: { projectId: currentProject.id, agentId } })
     }
   }
 
@@ -463,6 +469,7 @@ export function Dashboard() {
               onCreateAgent={handleCreateAgent}
               onEditAgent={handleEditAgent}
               onDeleteAgent={handleDeleteAgent}
+              onSuspendAgent={handleSuspendAgent}
               onAssignTask={handleAssignTaskFromAgent}
             />
           </TabsContent>
