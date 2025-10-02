@@ -12,7 +12,6 @@ import {
   AlertCircle, 
   CheckCircle, 
   PlayCircle, 
-  PauseCircle,
   MoreHorizontal,
   Edit,
   Trash2

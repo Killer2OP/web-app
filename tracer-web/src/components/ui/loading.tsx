@@ -145,7 +145,7 @@ interface NotificationToastProps {
   duration?: number
 }
 
-export function NotificationToast({ message, type, onClose, duration = 3000 }: NotificationToastProps) {
+export function NotificationToast({ message, type, onClose }: NotificationToastProps) {
   const typeConfig = {
     success: { icon: CheckSquare, color: 'bg-green-500', textColor: 'text-green-800' },
     error: { icon: Activity, color: 'bg-red-500', textColor: 'text-red-800' },

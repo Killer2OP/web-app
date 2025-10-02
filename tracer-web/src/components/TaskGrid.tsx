@@ -5,8 +5,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Task, Agent } from '@/types'
 import { TaskCard } from '@/components/TaskCard'
 import { TaskToolbar } from '@/components/TaskToolbar'
-import { TaskDialog } from '@/components/TaskDialog'
-import { AssignTaskDialog } from '@/components/AssignTaskDialog'
 import { cn } from '@/lib/utils'
 
 interface TaskGridProps {
@@ -28,7 +26,7 @@ export function TaskGrid({
 }: TaskGridProps) {
   const [view, setView] = useState<'grid' | 'list'>('grid')
   const [searchQuery, setSearchQuery] = useState('')
-  const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [statusFilter] = useState<string>('all')
 
   const filteredTasks = tasks.filter(task => {
     const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||

@@ -20,7 +20,6 @@ import {
   Plus, 
   Users, 
   CheckSquare, 
-  Clock, 
   Activity,
   TrendingUp,
   Zap

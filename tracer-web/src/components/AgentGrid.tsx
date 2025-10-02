@@ -8,8 +8,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Plus, Search, Users, Activity } from 'lucide-react'
-import { AgentDialog } from '@/components/AgentDialog'
-import { AssignTaskDialog } from '@/components/AssignTaskDialog'
 
 interface AgentGridProps {
   agents: Agent[]
@@ -27,7 +25,7 @@ export function AgentGrid({
   onAssignTask 
 }: AgentGridProps) {
   const [searchQuery, setSearchQuery] = useState('')
-  const [typeFilter, setTypeFilter] = useState<string>('all')
+  const [typeFilter] = useState<string>('all')
 
   const filteredAgents = agents.filter(agent => {
     const matchesSearch = agent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||

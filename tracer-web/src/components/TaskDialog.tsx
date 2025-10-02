@@ -5,8 +5,7 @@ import { motion } from 'framer-motion'
 import { Task } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
-import { X, Save, Clock, AlertCircle } from 'lucide-react'
+import { X, Save, Clock } from 'lucide-react'
 import { generateId } from '@/lib/utils'
 
 interface TaskDialogProps {

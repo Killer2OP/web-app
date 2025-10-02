@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { 
   GitBranch, 
-  ArrowRight, 
   Clock, 
   Users, 
   Zap,
@@ -34,7 +33,7 @@ interface TaskNode {
   dependents: string[]
 }
 
-export function PlanningBoard({ tasks, agents, onTaskUpdate, onAgentUpdate }: PlanningBoardProps) {
+export function PlanningBoard({ tasks, agents }: PlanningBoardProps) {
   const [taskNodes, setTaskNodes] = useState<TaskNode[]>([])
   const [selectedTask, setSelectedTask] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<'kanban' | 'timeline' | 'dependency'>('kanban')

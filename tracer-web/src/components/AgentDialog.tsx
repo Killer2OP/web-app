@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 import { Agent } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { X, Save, User, Activity } from 'lucide-react'
+import { X, Save, User } from 'lucide-react'
 import { generateId } from '@/lib/utils'
 
 interface AgentDialogProps {

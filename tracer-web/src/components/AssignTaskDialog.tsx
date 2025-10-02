@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Task, Agent } from '@/types'
+import { Agent } from '@/types'
 import { Button } from '@/components/ui/button'
 import { X, User, CheckCircle } from 'lucide-react'
 
