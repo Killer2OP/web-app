@@ -1,7 +1,8 @@
 'use client'
 
-import { createContext, useContext, useReducer, ReactNode } from 'react'
+import { createContext, useContext, useReducer, ReactNode, useEffect } from 'react'
 import { Task, Agent, Project, PlanningSession } from '@/types'
+import { projectApi, taskApi, agentApi, planningSessionApi } from '@/lib/api'
 
 /**
  * Application Context for Traycer
@@ -26,6 +27,10 @@ interface AppState {
   planningSessions: PlanningSession[]
   /** Currently active planning session */
   currentSession: PlanningSession | null
+  /** Loading state for API operations */
+  loading: boolean
+  /** Error state for API operations */
+  error: string | null
 }
 
 /**
@@ -35,16 +40,14 @@ interface AppState {
  * Each action includes a type and payload for type-safe state updates.
  */
 type AppAction =
+  | { type: 'SET_LOADING'; payload: boolean }
+  | { type: 'SET_ERROR'; payload: string | null }
+  | { type: 'LOAD_PROJECTS'; payload: Project[] }
   | { type: 'CREATE_PROJECT'; payload: Project }
   | { type: 'SET_CURRENT_PROJECT'; payload: Project }
-  | { type: 'CREATE_TASK'; payload: { projectId: string; task: Task } }
-  | { type: 'UPDATE_TASK'; payload: { projectId: string; taskId: string; updates: Partial<Task> } }
-  | { type: 'DELETE_TASK'; payload: { projectId: string; taskId: string } }
-  | { type: 'CREATE_AGENT'; payload: { projectId: string; agent: Agent } }
-  | { type: 'UPDATE_AGENT'; payload: { projectId: string; agentId: string; updates: Partial<Agent> } }
-  | { type: 'DELETE_AGENT'; payload: { projectId: string; agentId: string } }
-  | { type: 'SUSPEND_AGENT'; payload: { projectId: string; agentId: string } }
-  | { type: 'ASSIGN_TASK'; payload: { projectId: string; taskId: string; agentId: string } }
+  | { type: 'UPDATE_PROJECT'; payload: { projectId: string; updates: Partial<Project> } }
+  | { type: 'DELETE_PROJECT'; payload: { projectId: string } }
+  | { type: 'LOAD_PLANNING_SESSIONS'; payload: PlanningSession[] }
   | { type: 'CREATE_PLANNING_SESSION'; payload: PlanningSession }
   | { type: 'SET_CURRENT_SESSION'; payload: PlanningSession }
 
@@ -58,6 +61,8 @@ const initialState: AppState = {
   currentProject: null,
   planningSessions: [],
   currentSession: null,
+  loading: false,
+  error: null,
 }
 
 /**
@@ -72,6 +77,24 @@ const initialState: AppState = {
  */
 function appReducer(state: AppState, action: AppAction): AppState {
   switch (action.type) {
+    case 'SET_LOADING':
+      return {
+        ...state,
+        loading: action.payload,
+      }
+
+    case 'SET_ERROR':
+      return {
+        ...state,
+        error: action.payload,
+      }
+
+    case 'LOAD_PROJECTS':
+      return {
+        ...state,
+        projects: action.payload,
+      }
+
     case 'CREATE_PROJECT':
       return {
         ...state,
@@ -85,226 +108,32 @@ function appReducer(state: AppState, action: AppAction): AppState {
         currentProject: action.payload,
       }
 
-    case 'CREATE_TASK':
+    case 'UPDATE_PROJECT':
       return {
         ...state,
-        // Update projects array with new task
         projects: state.projects.map(project =>
           project.id === action.payload.projectId
-            ? { ...project, tasks: [...project.tasks, action.payload.task] }
+            ? { ...project, ...action.payload.updates }
             : project
         ),
-        // Update current project if it matches
         currentProject: state.currentProject?.id === action.payload.projectId
-          ? { ...state.currentProject, tasks: [...state.currentProject.tasks, action.payload.task] }
+          ? { ...state.currentProject, ...action.payload.updates }
           : state.currentProject,
       }
 
-    case 'UPDATE_TASK':
+    case 'DELETE_PROJECT':
       return {
         ...state,
-        // Update task in projects array
-        projects: state.projects.map(project =>
-          project.id === action.payload.projectId
-            ? {
-                ...project,
-                tasks: project.tasks.map(task =>
-                  task.id === action.payload.taskId
-                    ? { ...task, ...action.payload.updates, updatedAt: new Date() }
-                    : task
-                ),
-              }
-            : project
-        ),
-        // Update current project if it matches
+        projects: state.projects.filter(project => project.id !== action.payload.projectId),
         currentProject: state.currentProject?.id === action.payload.projectId
-          ? {
-              ...state.currentProject,
-              tasks: state.currentProject.tasks.map(task =>
-                task.id === action.payload.taskId
-                  ? { ...task, ...action.payload.updates, updatedAt: new Date() }
-                  : task
-              ),
-            }
+          ? state.projects.find(p => p.id !== action.payload.projectId) || null
           : state.currentProject,
       }
 
-    case 'DELETE_TASK':
+    case 'LOAD_PLANNING_SESSIONS':
       return {
         ...state,
-        // Remove task from projects array
-        projects: state.projects.map(project =>
-          project.id === action.payload.projectId
-            ? {
-                ...project,
-                tasks: project.tasks.filter(task => task.id !== action.payload.taskId),
-              }
-            : project
-        ),
-        // Update current project if it matches
-        currentProject: state.currentProject?.id === action.payload.projectId
-          ? {
-              ...state.currentProject,
-              tasks: state.currentProject.tasks.filter(task => task.id !== action.payload.taskId),
-            }
-          : state.currentProject,
-      }
-
-    case 'CREATE_AGENT':
-      return {
-        ...state,
-        // Add agent to projects array
-        projects: state.projects.map(project =>
-          project.id === action.payload.projectId
-            ? { ...project, agents: [...project.agents, action.payload.agent] }
-            : project
-        ),
-        // Update current project if it matches
-        currentProject: state.currentProject?.id === action.payload.projectId
-          ? { ...state.currentProject, agents: [...state.currentProject.agents, action.payload.agent] }
-          : state.currentProject,
-      }
-
-    case 'UPDATE_AGENT':
-      return {
-        ...state,
-        // Update agent in projects array
-        projects: state.projects.map(project =>
-          project.id === action.payload.projectId
-            ? {
-                ...project,
-                agents: project.agents.map(agent =>
-                  agent.id === action.payload.agentId
-                    ? { ...agent, ...action.payload.updates }
-                    : agent
-                ),
-              }
-            : project
-        ),
-        // Update current project if it matches
-        currentProject: state.currentProject?.id === action.payload.projectId
-          ? {
-              ...state.currentProject,
-              agents: state.currentProject.agents.map(agent =>
-                agent.id === action.payload.agentId
-                  ? { ...agent, ...action.payload.updates }
-                  : agent
-              ),
-            }
-          : state.currentProject,
-      }
-
-    case 'DELETE_AGENT':
-      return {
-        ...state,
-        // Remove agent from projects array
-        projects: state.projects.map(project =>
-          project.id === action.payload.projectId
-            ? {
-                ...project,
-                agents: project.agents.filter(agent => agent.id !== action.payload.agentId),
-                // Also unassign any tasks that were assigned to this agent
-                tasks: project.tasks.map(task =>
-                  task.agentId === action.payload.agentId
-                    ? { ...task, agentId: undefined, status: 'pending' as const }
-                    : task
-                ),
-              }
-            : project
-        ),
-        // Update current project if it matches
-        currentProject: state.currentProject?.id === action.payload.projectId
-          ? {
-              ...state.currentProject,
-              agents: state.currentProject.agents.filter(agent => agent.id !== action.payload.agentId),
-              tasks: state.currentProject.tasks.map(task =>
-                task.agentId === action.payload.agentId
-                  ? { ...task, agentId: undefined, status: 'pending' as const }
-                  : task
-              ),
-            }
-          : state.currentProject,
-      }
-
-    case 'SUSPEND_AGENT':
-      return {
-        ...state,
-        // Update agent status to suspended and clear current task
-        projects: state.projects.map(project =>
-          project.id === action.payload.projectId
-            ? {
-                ...project,
-                agents: project.agents.map(agent =>
-                  agent.id === action.payload.agentId
-                    ? { ...agent, status: 'suspended' as const, currentTaskId: undefined }
-                    : agent
-                ),
-                // Set any tasks assigned to this agent back to pending
-                tasks: project.tasks.map(task =>
-                  task.agentId === action.payload.agentId && task.status === 'in-progress'
-                    ? { ...task, status: 'pending' as const }
-                    : task
-                ),
-              }
-            : project
-        ),
-        // Update current project if it matches
-        currentProject: state.currentProject?.id === action.payload.projectId
-          ? {
-              ...state.currentProject,
-              agents: state.currentProject.agents.map(agent =>
-                agent.id === action.payload.agentId
-                  ? { ...agent, status: 'suspended' as const, currentTaskId: undefined }
-                  : agent
-              ),
-              tasks: state.currentProject.tasks.map(task =>
-                task.agentId === action.payload.agentId && task.status === 'in-progress'
-                  ? { ...task, status: 'pending' as const }
-                  : task
-              ),
-            }
-          : state.currentProject,
-      }
-
-    case 'ASSIGN_TASK':
-      return {
-        ...state,
-        // Update both task and agent when assigning
-        projects: state.projects.map(project =>
-          project.id === action.payload.projectId
-            ? {
-                ...project,
-                // Update task status and assignment
-                tasks: project.tasks.map(task =>
-                  task.id === action.payload.taskId
-                    ? { ...task, agentId: action.payload.agentId, status: 'in-progress' as const }
-                    : task
-                ),
-                // Update agent status and current task
-                agents: project.agents.map(agent =>
-                  agent.id === action.payload.agentId
-                    ? { ...agent, currentTaskId: action.payload.taskId, status: 'working' as const }
-                    : agent
-                ),
-              }
-            : project
-        ),
-        // Update current project if it matches
-        currentProject: state.currentProject?.id === action.payload.projectId
-          ? {
-              ...state.currentProject,
-              tasks: state.currentProject.tasks.map(task =>
-                task.id === action.payload.taskId
-                  ? { ...task, agentId: action.payload.agentId, status: 'in-progress' as const }
-                  : task
-              ),
-              agents: state.currentProject.agents.map(agent =>
-                agent.id === action.payload.agentId
-                  ? { ...agent, currentTaskId: action.payload.taskId, status: 'working' as const }
-                  : agent
-              ),
-            }
-          : state.currentProject,
+        planningSessions: action.payload,
       }
 
     case 'CREATE_PLANNING_SESSION':
@@ -330,24 +159,182 @@ function appReducer(state: AppState, action: AppAction): AppState {
  * 
  * Defines the shape of the context value that will be provided to components.
  */
-const AppContext = createContext<{
+interface AppContextType {
   state: AppState
   dispatch: React.Dispatch<AppAction>
-} | null>(null)
+  // API functions
+  loadProjects: () => Promise<void>
+  createProject: (data: { name: string; description: string; status?: string }) => Promise<Project | null>
+  updateProject: (id: string, data: { name?: string; description?: string; status?: string }) => Promise<Project | null>
+  deleteProject: (id: string) => Promise<boolean>
+  setCurrentProject: (project: Project) => void
+  loadPlanningSessions: (projectId?: string) => Promise<void>
+  createPlanningSession: (data: { name: string; description: string; projectId: string; status?: string; tasks?: string[]; agents?: string[] }) => Promise<PlanningSession | null>
+  setCurrentSession: (session: PlanningSession) => void
+}
+
+const AppContext = createContext<AppContextType | null>(null)
 
 /**
  * AppProvider component
  * 
  * Provides the application context to all child components.
- * Uses useReducer to manage complex state updates.
+ * Uses useReducer to manage complex state updates and integrates with API calls.
  * 
  * @param children - React children components
  */
 export function AppProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(appReducer, initialState)
 
+  // API functions
+  const loadProjects = async () => {
+    try {
+      dispatch({ type: 'SET_LOADING', payload: true })
+      dispatch({ type: 'SET_ERROR', payload: null })
+      
+      const response = await projectApi.getAll()
+      if (response.success && response.data) {
+        dispatch({ type: 'LOAD_PROJECTS', payload: response.data as Project[] })
+      } else {
+        dispatch({ type: 'SET_ERROR', payload: response.error || 'Failed to load projects' })
+      }
+    } catch (error) {
+      dispatch({ type: 'SET_ERROR', payload: 'Failed to load projects' })
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false })
+    }
+  }
+
+  const createProject = async (data: { name: string; description: string; status?: string }) => {
+    try {
+      dispatch({ type: 'SET_LOADING', payload: true })
+      dispatch({ type: 'SET_ERROR', payload: null })
+      
+      const response = await projectApi.create(data)
+      if (response.success && response.data) {
+        dispatch({ type: 'CREATE_PROJECT', payload: response.data as Project })
+        return response.data as Project
+      } else {
+        dispatch({ type: 'SET_ERROR', payload: response.error || 'Failed to create project' })
+        return null
+      }
+    } catch (error) {
+      dispatch({ type: 'SET_ERROR', payload: 'Failed to create project' })
+      return null
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false })
+    }
+  }
+
+  const updateProject = async (id: string, data: { name?: string; description?: string; status?: string }) => {
+    try {
+      dispatch({ type: 'SET_LOADING', payload: true })
+      dispatch({ type: 'SET_ERROR', payload: null })
+      
+      const response = await projectApi.update(id, data)
+      if (response.success && response.data) {
+        dispatch({ type: 'UPDATE_PROJECT', payload: { projectId: id, updates: response.data as Partial<Project> } })
+        return response.data as Project
+      } else {
+        dispatch({ type: 'SET_ERROR', payload: response.error || 'Failed to update project' })
+        return null
+      }
+    } catch (error) {
+      dispatch({ type: 'SET_ERROR', payload: 'Failed to update project' })
+      return null
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false })
+    }
+  }
+
+  const deleteProject = async (id: string) => {
+    try {
+      dispatch({ type: 'SET_LOADING', payload: true })
+      dispatch({ type: 'SET_ERROR', payload: null })
+      
+      const response = await projectApi.delete(id)
+      if (response.success) {
+        dispatch({ type: 'DELETE_PROJECT', payload: { projectId: id } })
+        return true
+      } else {
+        dispatch({ type: 'SET_ERROR', payload: response.error || 'Failed to delete project' })
+        return false
+      }
+    } catch (error) {
+      dispatch({ type: 'SET_ERROR', payload: 'Failed to delete project' })
+      return false
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false })
+    }
+  }
+
+  const setCurrentProject = (project: Project) => {
+    dispatch({ type: 'SET_CURRENT_PROJECT', payload: project })
+  }
+
+  const loadPlanningSessions = async (projectId?: string) => {
+    try {
+      dispatch({ type: 'SET_LOADING', payload: true })
+      dispatch({ type: 'SET_ERROR', payload: null })
+      
+      const response = await planningSessionApi.getAll(projectId ? { projectId } : undefined)
+      if (response.success && response.data) {
+        dispatch({ type: 'LOAD_PLANNING_SESSIONS', payload: response.data as PlanningSession[] })
+      } else {
+        dispatch({ type: 'SET_ERROR', payload: response.error || 'Failed to load planning sessions' })
+      }
+    } catch (error) {
+      dispatch({ type: 'SET_ERROR', payload: 'Failed to load planning sessions' })
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false })
+    }
+  }
+
+  const createPlanningSession = async (data: { name: string; description: string; projectId: string; status?: string; tasks?: string[]; agents?: string[] }) => {
+    try {
+      dispatch({ type: 'SET_LOADING', payload: true })
+      dispatch({ type: 'SET_ERROR', payload: null })
+      
+      const response = await planningSessionApi.create(data)
+      if (response.success && response.data) {
+        dispatch({ type: 'CREATE_PLANNING_SESSION', payload: response.data as PlanningSession })
+        return response.data as PlanningSession
+      } else {
+        dispatch({ type: 'SET_ERROR', payload: response.error || 'Failed to create planning session' })
+        return null
+      }
+    } catch (error) {
+      dispatch({ type: 'SET_ERROR', payload: 'Failed to create planning session' })
+      return null
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false })
+    }
+  }
+
+  const setCurrentSession = (session: PlanningSession) => {
+    dispatch({ type: 'SET_CURRENT_SESSION', payload: session })
+  }
+
+  // Load projects on mount
+  useEffect(() => {
+    loadProjects()
+  }, [])
+
+  const contextValue: AppContextType = {
+    state,
+    dispatch,
+    loadProjects,
+    createProject,
+    updateProject,
+    deleteProject,
+    setCurrentProject,
+    loadPlanningSessions,
+    createPlanningSession,
+    setCurrentSession,
+  }
+
   return (
-    <AppContext.Provider value={{ state, dispatch }}>
+    <AppContext.Provider value={contextValue}>
       {children}
     </AppContext.Provider>
   )
@@ -356,15 +343,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
 /**
  * Custom hook to access the application context
  * 
- * Provides a convenient way to access the application state and dispatch
- * function from any component within the AppProvider.
+ * Provides a convenient way to access the application state, dispatch
+ * function, and API functions from any component within the AppProvider.
  * 
- * @returns Object containing state and dispatch function
+ * @returns Object containing state, dispatch function, and API functions
  * @throws Error if used outside of AppProvider
  * 
  * @example
- * const { state, dispatch } = useApp()
- * dispatch({ type: 'CREATE_TASK', payload: { projectId: '123', task: newTask } })
+ * const { state, createProject, loadProjects } = useApp()
+ * await createProject({ name: 'New Project', description: 'Project description' })
  */
 export function useApp() {
   const context = useContext(AppContext)

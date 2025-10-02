@@ -51,9 +51,9 @@ export function AgentGrid({
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 bg-white border-b">
+      <div className="flex items-center justify-between p-4 bg-card border-b border-border">
         <div className="flex items-center space-x-4">
-          <h2 className="text-lg font-semibold">Agents</h2>
+          <h2 className="text-lg font-semibold text-card-foreground">Agents</h2>
           <Badge variant="secondary" className="text-sm">
             {agentStats.total} agents
           </Badge>
@@ -61,7 +61,7 @@ export function AgentGrid({
 
         <div className="flex items-center space-x-2">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <Input
               placeholder="Search agents..."
               value={searchQuery}
@@ -78,37 +78,37 @@ export function AgentGrid({
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-4 p-4 bg-gray-50 rounded-lg">
+      <div className="grid grid-cols-4 gap-4 p-4 bg-muted/50 rounded-lg border border-border">
         <div className="text-center">
           <div className="flex items-center justify-center mb-1">
-            <Users className="h-4 w-4 text-gray-400 mr-1" />
-            <span className="text-sm font-medium text-gray-900">Total</span>
+            <Users className="h-4 w-4 text-muted-foreground mr-1" />
+            <span className="text-sm font-medium text-card-foreground">Total</span>
           </div>
-          <div className="text-2xl font-bold text-gray-900">{agentStats.total}</div>
+          <div className="text-2xl font-bold text-card-foreground">{agentStats.total}</div>
         </div>
         
         <div className="text-center">
           <div className="flex items-center justify-center mb-1">
-            <div className="h-2 w-2 bg-green-500 rounded-full mr-1" />
-            <span className="text-sm font-medium text-gray-900">Idle</span>
+            <div className="h-2 w-2 bg-success rounded-full mr-1" />
+            <span className="text-sm font-medium text-card-foreground">Idle</span>
           </div>
-          <div className="text-2xl font-bold text-green-600">{agentStats.idle}</div>
+          <div className="text-2xl font-bold text-success">{agentStats.idle}</div>
         </div>
         
         <div className="text-center">
           <div className="flex items-center justify-center mb-1">
-            <Activity className="h-4 w-4 text-blue-500 mr-1" />
-            <span className="text-sm font-medium text-gray-900">Working</span>
+            <Activity className="h-4 w-4 text-info mr-1" />
+            <span className="text-sm font-medium text-card-foreground">Working</span>
           </div>
-          <div className="text-2xl font-bold text-blue-600">{agentStats.working}</div>
+          <div className="text-2xl font-bold text-info">{agentStats.working}</div>
         </div>
         
         <div className="text-center">
           <div className="flex items-center justify-center mb-1">
-            <div className="h-2 w-2 bg-orange-500 rounded-full mr-1" />
-            <span className="text-sm font-medium text-gray-900">Busy</span>
+            <div className="h-2 w-2 bg-warning rounded-full mr-1" />
+            <span className="text-sm font-medium text-card-foreground">Busy</span>
           </div>
-          <div className="text-2xl font-bold text-orange-600">{agentStats.busy}</div>
+          <div className="text-2xl font-bold text-warning">{agentStats.busy}</div>
         </div>
       </div>
 
@@ -135,11 +135,11 @@ export function AgentGrid({
           animate={{ opacity: 1 }}
           className="text-center py-12"
         >
-          <div className="text-gray-400 mb-4">
+          <div className="text-muted-foreground mb-4">
             <Users className="mx-auto h-12 w-12" />
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No agents found</h3>
-          <p className="text-gray-500 mb-4">
+          <h3 className="text-lg font-medium text-foreground mb-2">No agents found</h3>
+          <p className="text-muted-foreground mb-4">
             {searchQuery ? 'Try adjusting your search criteria.' : 'Get started by creating your first agent.'}
           </p>
           {!searchQuery && (

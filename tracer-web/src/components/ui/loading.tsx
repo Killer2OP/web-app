@@ -17,8 +17,23 @@ export function LoadingSpinner({ size = 'md', text }: LoadingSpinnerProps) {
 
   return (
     <div className="flex items-center justify-center space-x-2">
-      <Loader2 className={`${sizeClasses[size]} animate-spin text-blue-500`} />
-      {text && <span className="text-sm text-gray-600">{text}</span>}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.3 }}
+      >
+        <Loader2 className={`${sizeClasses[size]} animate-spin text-primary`} />
+      </motion.div>
+      {text && (
+        <motion.span
+          className="text-sm text-muted-foreground"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+        >
+          {text}
+        </motion.span>
+      )}
     </div>
   )
 }
@@ -40,18 +55,42 @@ export function EmptyState({ icon, title, description, action }: EmptyStateProps
       animate={{ opacity: 1, y: 0 }}
       className="text-center py-12"
     >
-      <div className="text-gray-400 mb-4">
+      <motion.div
+        className="text-muted-foreground mb-4"
+        initial={{ scale: 0.8 }}
+        animate={{ scale: 1 }}
+        transition={{ delay: 0.2 }}
+      >
         {icon}
-      </div>
-      <h3 className="text-lg font-medium text-gray-900 mb-2">{title}</h3>
-      <p className="text-gray-500 mb-4 max-w-sm mx-auto">{description}</p>
+      </motion.div>
+      <motion.h3
+        className="text-lg font-medium text-foreground mb-2"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.3 }}
+      >
+        {title}
+      </motion.h3>
+      <motion.p
+        className="text-muted-foreground mb-4 max-w-sm mx-auto"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.4 }}
+      >
+        {description}
+      </motion.p>
       {action && (
-        <button
+        <motion.button
           onClick={action.onClick}
-          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-primary-foreground bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring transition-all duration-200 hover:scale-105"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
         >
           {action.label}
-        </button>
+        </motion.button>
       )}
     </motion.div>
   )
@@ -75,7 +114,7 @@ export function StatusIndicator({ status, size = 'md', showLabel = false }: Stat
     working: { color: 'bg-blue-500', label: 'Working' },
     busy: { color: 'bg-orange-500', label: 'Busy' },
     completed: { color: 'bg-green-500', label: 'Completed' },
-    pending: { color: 'bg-gray-400', label: 'Pending' },
+    pending: { color: 'bg-muted-foreground', label: 'Pending' },
     'in-progress': { color: 'bg-blue-500', label: 'In Progress' },
     blocked: { color: 'bg-red-500', label: 'Blocked' },
   }
@@ -89,7 +128,7 @@ export function StatusIndicator({ status, size = 'md', showLabel = false }: Stat
         animate={{ scale: [1, 1.2, 1] }}
         transition={{ duration: 2, repeat: Infinity }}
       />
-      {showLabel && <span className="text-sm text-gray-600">{config.label}</span>}
+      {showLabel && <span className="text-sm text-muted-foreground">{config.label}</span>}
     </div>
   )
 }
@@ -122,11 +161,11 @@ export function ProgressBar({
     <div className="space-y-1">
       {label && (
         <div className="flex items-center justify-between text-sm">
-          <span className="text-gray-600">{label}</span>
-          {showPercentage && <span className="text-gray-500">{Math.round(percentage)}%</span>}
+          <span className="text-muted-foreground">{label}</span>
+          {showPercentage && <span className="text-muted-foreground">{Math.round(percentage)}%</span>}
         </div>
       )}
-      <div className="w-full bg-gray-200 rounded-full h-2">
+      <div className="w-full bg-muted rounded-full h-2">
         <motion.div
           className={`h-2 rounded-full ${colorClasses[color]}`}
           initial={{ width: 0 }}
@@ -166,12 +205,14 @@ export function NotificationToast({ message, type, onClose }: NotificationToastP
       <div className={`${config.color} text-white p-4 rounded-lg shadow-lg flex items-center space-x-3`}>
         <Icon className="h-5 w-5 flex-shrink-0" />
         <p className="text-sm font-medium flex-1">{message}</p>
-        <button
+        <motion.button
           onClick={onClose}
           className="text-white hover:text-gray-200 transition-colors"
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
         >
           ×
-        </button>
+        </motion.button>
       </div>
     </motion.div>
   )

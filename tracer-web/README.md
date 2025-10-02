@@ -1,168 +1,287 @@
-# Traycer - AI-Powered Development Planning
+# Tracer Web - Full Stack Project Management Application
 
-A modern web application that serves as a planning layer on top of coding agents, inspired by the concept of Traycer. This application provides an intuitive interface for managing development tasks, coordinating AI agents, and visualizing project progress.
+A comprehensive project management application built with Next.js, MongoDB Atlas, and TypeScript. This application provides tools for managing projects, tasks, agents, and planning sessions with a modern, responsive interface.
 
-## 🚀 Features
+## Features
 
-### Core Functionality
-- **Task Management**: Create, edit, and track development tasks with priorities and dependencies
-- **Agent Coordination**: Manage AI agents with different specializations (Frontend, Backend, Full-stack, DevOps, AI/ML)
-- **Planning Interface**: Visualize project progress with multiple view modes (Kanban, Timeline, Dependencies)
-- **Real-time Updates**: Track agent status and task progress in real-time
+- **Project Management**: Create, update, and manage projects with detailed descriptions and status tracking
+- **Task Management**: Organize tasks with priorities, dependencies, and time tracking
+- **Agent Management**: Manage AI agents and team members with capabilities and efficiency ratings
+- **Planning Sessions**: Create and manage planning sessions for project coordination
+- **Real-time Updates**: Live updates across the application using React Context
+- **Responsive Design**: Modern UI built with Tailwind CSS and Radix UI components
+- **Type Safety**: Full TypeScript implementation for better development experience
 
-### Advanced Features
-- **Dependency Management**: Visualize task dependencies and critical path analysis
-- **Agent Efficiency Tracking**: Monitor agent performance and workload distribution
-- **Multiple View Modes**: Switch between Kanban board, timeline, and dependency graph views
-- **Keyboard Shortcuts**: Power user features with keyboard navigation
-- **Responsive Design**: Works seamlessly across desktop and mobile devices
+## Tech Stack
 
-### UI/UX Improvements
-- **Modern Design**: Clean, intuitive interface with smooth animations
-- **Status Indicators**: Visual status indicators for tasks and agents
-- **Progress Tracking**: Real-time progress bars and completion metrics
-- **Interactive Elements**: Hover effects, smooth transitions, and micro-interactions
+### Frontend
+- **Next.js 15** - React framework with App Router
+- **React 19** - UI library
+- **TypeScript** - Type safety
+- **Tailwind CSS** - Styling
+- **Radix UI** - Accessible component primitives
+- **Framer Motion** - Animations
+- **Lucide React** - Icons
 
-## 🛠️ Tech Stack
+### Backend
+- **Next.js API Routes** - Serverless API endpoints
+- **MongoDB Atlas** - Cloud database
+- **Mongoose** - MongoDB object modeling
+- **JWT** - Authentication (ready for implementation)
 
-- **Framework**: Next.js 15 with App Router
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS v4
-- **UI Components**: Radix UI primitives
-- **Animations**: Framer Motion
-- **Icons**: Lucide React
-- **State Management**: React Context + useReducer
+### Development Tools
+- **ESLint** - Code linting
+- **TypeScript** - Type checking
+- **PostCSS** - CSS processing
 
-## 🏗️ Project Structure
-
-```
-src/
-├── app/                    # Next.js app directory
-│   ├── globals.css        # Global styles and CSS variables
-│   ├── layout.tsx         # Root layout component
-│   └── page.tsx           # Home page
-├── components/            # React components
-│   ├── ui/                # Reusable UI components
-│   ├── Dashboard.tsx      # Main dashboard component
-│   ├── TaskGrid.tsx       # Task management interface
-│   ├── AgentGrid.tsx      # Agent management interface
-│   ├── PlanningBoard.tsx  # Advanced planning interface
-│   └── ...                # Other components
-├── context/               # React Context providers
-│   └── AppContext.tsx     # Main application state
-├── hooks/                 # Custom React hooks
-│   └── useKeyboardShortcuts.ts
-├── lib/                   # Utility functions
-│   └── utils.ts
-└── types/                 # TypeScript type definitions
-    └── index.ts
-```
-
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
+
 - Node.js 18+ 
 - npm or yarn
+- MongoDB Atlas account (free tier available)
 
 ### Installation
 
-1. Clone the repository:
+1. **Clone the repository**
 ```bash
 git clone <repository-url>
 cd tracer-web
 ```
 
-2. Install dependencies:
+2. **Install dependencies**
 ```bash
 npm install
 ```
 
-3. Start the development server:
+3. **Set up environment variables**
+   
+   Create a `.env.local` file in the root directory:
+   ```env
+   # MongoDB Atlas Configuration
+   MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/tracer-web?retryWrites=true&w=majority
+   
+   # JWT Secret for authentication (generate a secure random string)
+   JWT_SECRET=your-super-secret-jwt-key-here
+   
+   # Next.js Configuration
+   NEXTAUTH_URL=http://localhost:3000
+   NEXTAUTH_SECRET=your-nextauth-secret-here
+   
+   # Environment
+   NODE_ENV=development
+   ```
+
+4. **Set up MongoDB Atlas**
+   
+   - Create a free account at [MongoDB Atlas](https://www.mongodb.com/atlas)
+   - Create a new cluster
+   - Get your connection string and replace the placeholders in `.env.local`
+   - Whitelist your IP address in Atlas security settings
+
+5. **Run the development server**
 ```bash
 npm run dev
 ```
 
-4. Open [http://localhost:3000](http://localhost:3000) in your browser
+6. **Open your browser**
+   
+   Navigate to [http://localhost:3000](http://localhost:3000) to see the application.
 
-### Build for Production
+## Project Structure
 
-```bash
-npm run build
-npm start
+```
+src/
+├── app/                    # Next.js App Router
+│   ├── api/               # API routes
+│   │   ├── projects/      # Project CRUD operations
+│   │   ├── tasks/         # Task CRUD operations
+│   │   ├── agents/        # Agent CRUD operations
+│   │   └── planning-sessions/ # Planning session CRUD operations
+│   ├── globals.css        # Global styles
+│   ├── layout.tsx         # Root layout
+│   └── page.tsx           # Home page
+├── components/            # React components
+│   ├── ui/               # Reusable UI components
+│   ├── Dashboard.tsx     # Main dashboard
+│   ├── ProjectManager.tsx # Project management
+│   ├── TaskGrid.tsx      # Task display
+│   ├── AgentGrid.tsx     # Agent display
+│   └── PlanningBoard.tsx # Planning interface
+├── context/              # React Context providers
+│   ├── AppContext.tsx    # Main application state
+│   └── ThemeContext.tsx  # Theme management
+├── hooks/                # Custom React hooks
+├── lib/                  # Utility libraries
+│   ├── api.ts           # API client
+│   ├── mongodb.ts       # Database connection
+│   ├── validation.ts    # Input validation
+│   └── error-handler.ts # Error handling
+├── models/              # MongoDB models
+│   ├── Project.ts       # Project schema
+│   ├── Task.ts          # Task schema
+│   ├── Agent.ts         # Agent schema
+│   └── PlanningSession.ts # Planning session schema
+└── types/               # TypeScript type definitions
+    └── index.ts         # Core types
 ```
 
-## 🎯 Key Concepts
+## API Endpoints
 
-### Planning Layer Architecture
-Traycer acts as a planning layer that sits on top of coding agents, providing:
-- **Task Orchestration**: Breaking down complex projects into manageable tasks
-- **Agent Coordination**: Assigning tasks to appropriate agents based on capabilities
-- **Progress Monitoring**: Tracking completion and identifying bottlenecks
-- **Dependency Management**: Ensuring tasks are completed in the correct order
+### Projects
+- `GET /api/projects` - Get all projects
+- `POST /api/projects` - Create a new project
+- `GET /api/projects/[id]` - Get project by ID
+- `PUT /api/projects/[id]` - Update project
+- `DELETE /api/projects/[id]` - Delete project
+- `GET /api/projects/[id]/stats` - Get project statistics
 
-### Agent Types
-- **Frontend Agent**: Specialized in React, TypeScript, CSS, UI/UX
-- **Backend Agent**: Focused on APIs, databases, server-side logic
-- **Full-stack Agent**: Capable of both frontend and backend development
-- **DevOps Agent**: Infrastructure, deployment, CI/CD pipelines
-- **AI/ML Agent**: Machine learning, AI integration, data processing
+### Tasks
+- `GET /api/tasks` - Get all tasks (with filtering)
+- `POST /api/tasks` - Create a new task
+- `GET /api/tasks/[id]` - Get task by ID
+- `PUT /api/tasks/[id]` - Update task
+- `DELETE /api/tasks/[id]` - Delete task
+- `POST /api/tasks/assign` - Assign task to agent
+- `DELETE /api/tasks/assign` - Unassign task from agent
 
-### Task Lifecycle
-1. **Pending**: Task created but not assigned
-2. **In Progress**: Assigned to an agent and being worked on
-3. **Completed**: Task finished and reviewed
-4. **Blocked**: Task cannot proceed due to dependencies or issues
+### Agents
+- `GET /api/agents` - Get all agents (with filtering)
+- `POST /api/agents` - Create a new agent
+- `GET /api/agents/[id]` - Get agent by ID
+- `PUT /api/agents/[id]` - Update agent
+- `DELETE /api/agents/[id]` - Delete agent
 
-## 🎨 Design Philosophy
+### Planning Sessions
+- `GET /api/planning-sessions` - Get all planning sessions
+- `POST /api/planning-sessions` - Create a new planning session
+- `GET /api/planning-sessions/[id]` - Get planning session by ID
+- `PUT /api/planning-sessions/[id]` - Update planning session
+- `DELETE /api/planning-sessions/[id]` - Delete planning session
 
-### User Experience
-- **Intuitive Navigation**: Clear information hierarchy and logical flow
-- **Visual Feedback**: Immediate response to user actions
-- **Efficiency**: Keyboard shortcuts and bulk operations
-- **Accessibility**: Semantic HTML and keyboard navigation
+## Database Schema
 
-### Visual Design
-- **Modern Aesthetics**: Clean, minimal design with subtle shadows and borders
-- **Consistent Spacing**: Systematic use of spacing and typography
-- **Color Coding**: Meaningful use of color for status and priority
-- **Responsive Layout**: Adapts seamlessly to different screen sizes
+### Project
+```typescript
+{
+  name: string
+  description: string
+  status: 'active' | 'completed' | 'paused' | 'archived'
+  ownerId?: ObjectId
+  createdAt: Date
+  updatedAt: Date
+}
+```
 
-## 🔮 Future Enhancements
+### Task
+```typescript
+{
+  title: string
+  description: string
+  status: 'pending' | 'in-progress' | 'completed' | 'blocked'
+  priority: 'low' | 'medium' | 'high' | 'urgent'
+  projectId: ObjectId
+  agentId?: ObjectId
+  dependencies: ObjectId[]
+  estimatedHours?: number
+  actualHours?: number
+  createdAt: Date
+  updatedAt: Date
+}
+```
 
-### Planned Features
-- **LLM Integration**: AI-powered task suggestions and agent recommendations
-- **Real-time Collaboration**: Multi-user support with live updates
-- **Advanced Analytics**: Detailed project metrics and insights
-- **Integration APIs**: Connect with external tools and services
-- **Custom Agent Types**: User-defined agent specializations
-- **Automated Testing**: Built-in testing and quality assurance
+### Agent
+```typescript
+{
+  name: string
+  type: 'frontend' | 'backend' | 'fullstack' | 'devops' | 'ai'
+  status: 'idle' | 'working' | 'busy' | 'suspended'
+  projectId: ObjectId
+  currentTaskId?: ObjectId
+  capabilities: string[]
+  efficiency: number (0-1)
+  createdAt: Date
+  updatedAt: Date
+}
+```
 
-### Technical Improvements
-- **Performance Optimization**: Virtual scrolling and lazy loading
-- **Offline Support**: Progressive Web App capabilities
-- **Advanced State Management**: Redux or Zustand integration
-- **Testing Suite**: Comprehensive unit and integration tests
-- **Documentation**: Interactive API documentation
+### Planning Session
+```typescript
+{
+  name: string
+  description: string
+  projectId: ObjectId
+  status: 'draft' | 'active' | 'completed'
+  tasks: ObjectId[]
+  agents: ObjectId[]
+  createdAt: Date
+  updatedAt: Date
+}
+```
 
-## 🤝 Contributing
+## Development
 
-We welcome contributions! Please see our contributing guidelines for details on:
-- Code style and standards
-- Pull request process
-- Issue reporting
-- Development setup
+### Available Scripts
 
-## 📄 License
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run start` - Start production server
+- `npm run lint` - Run ESLint
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+### Code Style
 
-## 🙏 Acknowledgments
+The project uses ESLint for code linting and follows Next.js best practices. TypeScript is used throughout for type safety.
 
-- Inspired by the Traycer concept of AI-powered development planning
-- Built with modern web technologies and best practices
-- UI/UX inspired by leading project management tools
-- Icons provided by Lucide React
+### Adding New Features
 
----
+1. **API Routes**: Add new routes in `src/app/api/`
+2. **Components**: Add new components in `src/components/`
+3. **Types**: Add new types in `src/types/index.ts`
+4. **Models**: Add new MongoDB models in `src/models/`
 
-**Traycer** - Empowering developers with intelligent planning and coordination tools.
+## Deployment
+
+### Vercel (Recommended)
+
+1. Push your code to GitHub
+2. Connect your repository to Vercel
+3. Add environment variables in Vercel dashboard
+4. Deploy automatically on push
+
+### Other Platforms
+
+The application can be deployed to any platform that supports Next.js:
+- Netlify
+- AWS Amplify
+- Railway
+- DigitalOcean App Platform
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
+
+## License
+
+This project is licensed under the MIT License.
+
+## Support
+
+For support, please open an issue in the GitHub repository or contact the development team.
+
+## Roadmap
+
+- [ ] User authentication and authorization
+- [ ] Real-time collaboration features
+- [ ] Advanced reporting and analytics
+- [ ] Mobile application
+- [ ] Integration with external tools
+- [ ] Advanced task automation
+- [ ] Team management features
+- [ ] File upload and management
+- [ ] Notification system
+- [ ] API rate limiting and security enhancements

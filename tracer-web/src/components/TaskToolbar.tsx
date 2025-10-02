@@ -23,9 +23,9 @@ export function TaskToolbar({
   taskCount,
 }: TaskToolbarProps) {
   return (
-    <div className="flex items-center justify-between p-4 bg-white border-b">
+    <div className="flex items-center justify-between p-4 bg-card border-b border-border">
       <div className="flex items-center space-x-4">
-        <h2 className="text-lg font-semibold">Tasks</h2>
+        <h2 className="text-lg font-semibold text-card-foreground">Tasks</h2>
         <Badge variant="secondary" className="text-sm">
           {taskCount} tasks
         </Badge>
@@ -33,7 +33,7 @@ export function TaskToolbar({
 
       <div className="flex items-center space-x-2">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
             placeholder="Search tasks..."
             value={searchQuery}

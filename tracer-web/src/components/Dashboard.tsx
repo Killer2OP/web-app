@@ -12,8 +12,12 @@ import { PlanningBoard } from '@/components/PlanningBoard'
 import { TaskDialog } from '@/components/TaskDialog'
 import { AgentDialog } from '@/components/AgentDialog'
 import { AssignTaskDialog } from '@/components/AssignTaskDialog'
+import { ProgressTracker } from '@/components/ProgressTracker'
+import { ActivityLog } from '@/components/ActivityLog'
+import { ProjectManager } from '@/components/ProjectManager'
+import { SearchAndFilter } from '@/components/SearchAndFilter'
 import { useApp } from '@/context/AppContext'
-import { useKeyboardShortcuts, KeyboardShortcutHint } from '@/hooks/useKeyboardShortcuts'
+import { useKeyboardShortcuts, KeyboardShortcutsHelp } from '@/hooks/useKeyboardShortcuts'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { Task, Agent } from '@/types'
 import { 
@@ -45,7 +49,7 @@ export function Dashboard() {
   const { state, dispatch } = useApp()
   
   // Local state for UI management
-  const [activeTab, setActiveTab] = useState('overview')
+  const [activeTab, setActiveTab] = useState('projects')
   
   // Dialog state management
   const [taskDialog, setTaskDialog] = useState<{ isOpen: boolean; task?: Task; mode: 'create' | 'edit' }>({
@@ -65,6 +69,11 @@ export function Dashboard() {
   const currentProject = state.currentProject
   const tasks = currentProject?.tasks || []
   const agents = currentProject?.agents || []
+  const projects = state.projects
+
+  // Filtered data state
+  const [filteredTasks, setFilteredTasks] = useState<Task[]>(tasks)
+  const [filteredAgents, setFilteredAgents] = useState<Agent[]>(agents)
 
   /**
    * Calculate application statistics
@@ -73,13 +82,13 @@ export function Dashboard() {
    * for display in the overview tab.
    */
   const stats = {
-    totalTasks: tasks.length,
-    completedTasks: tasks.filter(t => t.status === 'completed').length,
-    inProgressTasks: tasks.filter(t => t.status === 'in-progress').length,
-    pendingTasks: tasks.filter(t => t.status === 'pending').length,
-    totalAgents: agents.length,
-    idleAgents: agents.filter(a => a.status === 'idle').length,
-    workingAgents: agents.filter(a => a.status === 'working').length,
+    totalTasks: filteredTasks.length,
+    completedTasks: filteredTasks.filter(t => t.status === 'completed').length,
+    inProgressTasks: filteredTasks.filter(t => t.status === 'in-progress').length,
+    pendingTasks: filteredTasks.filter(t => t.status === 'pending').length,
+    totalAgents: filteredAgents.length,
+    idleAgents: filteredAgents.filter(a => a.status === 'idle').length,
+    workingAgents: filteredAgents.filter(a => a.status === 'working').length,
   }
 
   // Task management handlers
@@ -156,6 +165,34 @@ export function Dashboard() {
     if (pendingTask) {
       handleAssignTaskToAgent(pendingTask.id, agentId)
     }
+  }
+
+
+  // Project management handlers
+  const handleProjectCreate = (project: Project) => {
+    dispatch({ type: 'CREATE_PROJECT', payload: project })
+  }
+
+  const handleProjectSelect = (project: Project) => {
+    dispatch({ type: 'SET_CURRENT_PROJECT', payload: project })
+    setActiveTab('overview')
+  }
+
+  const handleProjectUpdate = (projectId: string, updates: Partial<Project>) => {
+    dispatch({ type: 'UPDATE_PROJECT', payload: { projectId, updates } })
+  }
+
+  const handleProjectDelete = (projectId: string) => {
+    dispatch({ type: 'DELETE_PROJECT', payload: { projectId } })
+  }
+
+  // Search and filter handlers
+  const handleFilteredTasks = (tasks: Task[]) => {
+    setFilteredTasks(tasks)
+  }
+
+  const handleFilteredAgents = (agents: Agent[]) => {
+    setFilteredAgents(agents)
   }
 
   /**
@@ -294,6 +331,37 @@ export function Dashboard() {
       setAgentDialog({ isOpen: false, mode: 'create' })
       setAssignDialog({ isOpen: false, taskId: '' })
     },
+    onCreateProject: () => {
+      // This would trigger project creation - for now just log
+      console.log('Create project shortcut triggered')
+    },
+    onGoToProjects: () => setActiveTab('projects'),
+    onGoToOverview: () => setActiveTab('overview'),
+    onGoToTasks: () => setActiveTab('tasks'),
+    onGoToAgents: () => setActiveTab('agents'),
+    onGoToPlanning: () => setActiveTab('planning'),
+    onGoToProgress: () => setActiveTab('progress'),
+    onGoToActivity: () => setActiveTab('activity'),
+    onToggleTheme: () => {
+      // This would toggle theme - for now just log
+      console.log('Toggle theme shortcut triggered')
+    },
+    onOpenAI: () => {
+      // This would open AI assistant - for now just log
+      console.log('Open AI assistant shortcut triggered')
+    },
+    onSave: () => {
+      // This would save current state - for now just log
+      console.log('Save shortcut triggered')
+    },
+    onUndo: () => {
+      // This would undo last action - for now just log
+      console.log('Undo shortcut triggered')
+    },
+    onRedo: () => {
+      // This would redo last action - for now just log
+      console.log('Redo shortcut triggered')
+    },
   })
 
   return (
@@ -321,15 +389,37 @@ export function Dashboard() {
       <div className="p-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           {/* Tab Navigation */}
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-7">
+            <TabsTrigger value="projects">Projects</TabsTrigger>
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="tasks">Tasks</TabsTrigger>
             <TabsTrigger value="agents">Agents</TabsTrigger>
             <TabsTrigger value="planning">Planning</TabsTrigger>
+            <TabsTrigger value="progress">Progress</TabsTrigger>
+            <TabsTrigger value="activity">Activity</TabsTrigger>
           </TabsList>
+
+          {/* Projects Tab - Project Management */}
+          <TabsContent value="projects">
+            <ProjectManager
+              projects={projects}
+              currentProject={currentProject}
+              onProjectCreate={handleProjectCreate}
+              onProjectSelect={handleProjectSelect}
+              onProjectUpdate={handleProjectUpdate}
+              onProjectDelete={handleProjectDelete}
+            />
+          </TabsContent>
 
           {/* Overview Tab - Statistics and Quick Actions */}
           <TabsContent value="overview" className="space-y-6">
+            {/* Search and Filter */}
+            <SearchAndFilter
+              tasks={tasks}
+              agents={agents}
+              onFilteredTasks={handleFilteredTasks}
+              onFilteredAgents={handleFilteredAgents}
+            />
             {/* Statistics Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <Card>
@@ -413,7 +503,7 @@ export function Dashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {tasks.slice(0, 3).map((task) => (
+                  {filteredTasks.slice(0, 3).map((task) => (
                     <div key={task.id} className="flex items-center space-x-3">
                       <div className={`h-2 w-2 rounded-full ${
                         task.status === 'completed' ? 'bg-success' :
@@ -440,21 +530,22 @@ export function Dashboard() {
                 <CardTitle>Keyboard Shortcuts</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  <KeyboardShortcutHint shortcut="Ctrl+T" description="Create new task" />
-                  <KeyboardShortcutHint shortcut="Ctrl+A" description="Create new agent" />
-                  <KeyboardShortcutHint shortcut="Ctrl+K" description="Search tasks" />
-                  <KeyboardShortcutHint shortcut="Esc" description="Close dialogs" />
-                </div>
+                <KeyboardShortcutsHelp />
               </CardContent>
             </Card>
           </TabsContent>
 
           {/* Tasks Tab - Task Management Grid */}
           <TabsContent value="tasks">
-            <TaskGrid
+            <SearchAndFilter
               tasks={tasks}
               agents={agents}
+              onFilteredTasks={handleFilteredTasks}
+              onFilteredAgents={handleFilteredAgents}
+            />
+            <TaskGrid
+              tasks={filteredTasks}
+              agents={filteredAgents}
               onCreateTask={handleCreateTask}
               onEditTask={handleEditTask}
               onDeleteTask={handleDeleteTask}
@@ -464,8 +555,14 @@ export function Dashboard() {
 
           {/* Agents Tab - Agent Management Grid */}
           <TabsContent value="agents">
-            <AgentGrid
+            <SearchAndFilter
+              tasks={tasks}
               agents={agents}
+              onFilteredTasks={handleFilteredTasks}
+              onFilteredAgents={handleFilteredAgents}
+            />
+            <AgentGrid
+              agents={filteredAgents}
               onCreateAgent={handleCreateAgent}
               onEditAgent={handleEditAgent}
               onDeleteAgent={handleDeleteAgent}
@@ -476,9 +573,15 @@ export function Dashboard() {
 
           {/* Planning Tab - Visual Planning Board */}
           <TabsContent value="planning">
-            <PlanningBoard
+            <SearchAndFilter
               tasks={tasks}
               agents={agents}
+              onFilteredTasks={handleFilteredTasks}
+              onFilteredAgents={handleFilteredAgents}
+            />
+            <PlanningBoard
+              tasks={filteredTasks}
+              agents={filteredAgents}
               onTaskUpdate={(taskId, updates) => {
                 if (currentProject) {
                   dispatch({ type: 'UPDATE_TASK', payload: { projectId: currentProject.id, taskId, updates } })
@@ -491,6 +594,22 @@ export function Dashboard() {
               }}
             />
           </TabsContent>
+
+          {/* Progress Tab - Progress Tracking and Analytics */}
+          <TabsContent value="progress">
+            <ProgressTracker
+              tasks={filteredTasks}
+              agents={filteredAgents}
+            />
+          </TabsContent>
+
+          {/* Activity Tab - Activity Log and History */}
+          <TabsContent value="activity">
+            <ActivityLog
+              tasks={filteredTasks}
+              agents={filteredAgents}
+            />
+          </TabsContent>
         </Tabs>
       </div>
 
@@ -501,6 +620,8 @@ export function Dashboard() {
         onSave={handleSaveTask}
         task={taskDialog.task}
         mode={taskDialog.mode}
+        availableTasks={filteredTasks}
+        availableAgents={filteredAgents.map(agent => ({ id: agent.id, name: agent.name, type: agent.type }))}
       />
 
       <AgentDialog
@@ -516,9 +637,10 @@ export function Dashboard() {
         onClose={() => setAssignDialog({ isOpen: false, taskId: '' })}
         onAssign={handleAssignTaskToAgent}
         taskId={assignDialog.taskId}
-        agents={agents}
+        agents={filteredAgents}
         taskTitle={assignDialog.taskTitle}
       />
+
     </div>
   )
 }

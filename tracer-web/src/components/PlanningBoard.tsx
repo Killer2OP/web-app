@@ -13,7 +13,9 @@ import {
   Zap,
   Target,
   TrendingUp,
-  Activity
+  Activity,
+  GripVertical,
+  Plus
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -33,10 +35,12 @@ interface TaskNode {
   dependents: string[]
 }
 
-export function PlanningBoard({ tasks, agents }: PlanningBoardProps) {
+export function PlanningBoard({ tasks, agents, onTaskUpdate }: PlanningBoardProps) {
   const [taskNodes, setTaskNodes] = useState<TaskNode[]>([])
   const [selectedTask, setSelectedTask] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<'kanban' | 'timeline' | 'dependency'>('kanban')
+  const [draggedTask, setDraggedTask] = useState<string | null>(null)
+  const [dragOverColumn, setDragOverColumn] = useState<string | null>(null)
 
   useEffect(() => {
     // Create task nodes with positions
@@ -53,10 +57,10 @@ export function PlanningBoard({ tasks, agents }: PlanningBoardProps) {
 
   const getStatusColor = (status: Task['status']) => {
     switch (status) {
-      case 'pending': return 'bg-gray-100 text-gray-800'
-      case 'in-progress': return 'bg-blue-100 text-blue-800'
-      case 'completed': return 'bg-green-100 text-green-800'
-      case 'blocked': return 'bg-red-100 text-red-800'
+      case 'pending': return 'bg-muted text-muted-foreground'
+      case 'in-progress': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+      case 'completed': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+      case 'blocked': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
     }
   }
 
@@ -81,6 +85,31 @@ export function PlanningBoard({ tasks, agents }: PlanningBoardProps) {
     return blockedTasks.length
   }
 
+  // Drag and drop handlers
+  const handleDragStart = (e: React.DragEvent, taskId: string) => {
+    setDraggedTask(taskId)
+    e.dataTransfer.effectAllowed = 'move'
+  }
+
+  const handleDragOver = (e: React.DragEvent, columnId: string) => {
+    e.preventDefault()
+    setDragOverColumn(columnId)
+    e.dataTransfer.dropEffect = 'move'
+  }
+
+  const handleDragLeave = () => {
+    setDragOverColumn(null)
+  }
+
+  const handleDrop = (e: React.DragEvent, columnId: string) => {
+    e.preventDefault()
+    if (draggedTask && columnId) {
+      onTaskUpdate(draggedTask, { status: columnId as Task['status'] })
+    }
+    setDraggedTask(null)
+    setDragOverColumn(null)
+  }
+
   const renderKanbanView = () => {
     const columns = [
       { id: 'pending', title: 'Pending', tasks: tasks.filter(t => t.status === 'pending') },
@@ -93,14 +122,24 @@ export function PlanningBoard({ tasks, agents }: PlanningBoardProps) {
       <div className="flex space-x-4 overflow-x-auto pb-4">
         {columns.map((column) => (
           <div key={column.id} className="flex-shrink-0 w-80">
-            <div className="bg-white rounded-lg border">
+            <div className={cn(
+              "bg-card rounded-lg border transition-colors",
+              dragOverColumn === column.id && "border-primary bg-primary/5"
+            )}>
               <div className="p-4 border-b">
-                <h3 className="font-medium text-gray-900">{column.title}</h3>
-                <Badge variant="secondary" className="mt-1">
-                  {column.tasks.length} tasks
-                </Badge>
+                <div className="flex items-center justify-between">
+                  <h3 className="font-medium text-foreground">{column.title}</h3>
+                  <Badge variant="secondary" className="text-xs">
+                    {column.tasks.length} tasks
+                  </Badge>
+                </div>
               </div>
-              <div className="p-4 space-y-3 min-h-96">
+              <div 
+                className="p-4 space-y-3 min-h-96"
+                onDragOver={(e) => handleDragOver(e, column.id)}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleDrop(e, column.id)}
+              >
                 <AnimatePresence>
                   {column.tasks.map((task) => (
                     <motion.div
@@ -108,35 +147,41 @@ export function PlanningBoard({ tasks, agents }: PlanningBoardProps) {
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -20 }}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, task.id)}
                       className={cn(
-                        "p-3 border rounded-lg cursor-pointer transition-all hover:shadow-md",
-                        selectedTask === task.id && "ring-2 ring-blue-500"
+                        "p-3 border rounded-lg cursor-move transition-all hover:shadow-md bg-card",
+                        selectedTask === task.id && "ring-2 ring-primary",
+                        draggedTask === task.id && "opacity-50"
                       )}
                       onClick={() => setSelectedTask(selectedTask === task.id ? null : task.id)}
                     >
                       <div className="flex items-start justify-between mb-2">
-                        <h4 className="text-sm font-medium text-gray-900 line-clamp-2">
-                          {task.title}
-                        </h4>
+                        <div className="flex items-start space-x-2 flex-1">
+                          <GripVertical className="h-3 w-3 text-muted-foreground mt-0.5 flex-shrink-0" />
+                          <h4 className="text-sm font-medium text-foreground line-clamp-2">
+                            {task.title}
+                          </h4>
+                        </div>
                         <Badge className={cn("text-xs", getStatusColor(task.status))}>
                           {task.priority}
                         </Badge>
                       </div>
                       
-                      <p className="text-xs text-gray-500 mb-2 line-clamp-2">
+                      <p className="text-xs text-muted-foreground mb-2 line-clamp-2 ml-5">
                         {task.description}
                       </p>
 
                       {task.agentId && (
-                        <div className="flex items-center space-x-2 mb-2">
-                          <Users className="h-3 w-3 text-gray-400" />
-                          <span className="text-xs text-gray-600">
+                        <div className="flex items-center space-x-2 mb-2 ml-5">
+                          <Users className="h-3 w-3 text-muted-foreground" />
+                          <span className="text-xs text-muted-foreground">
                             {agents.find(a => a.id === task.agentId)?.name}
                           </span>
                         </div>
                       )}
 
-                      <div className="flex items-center justify-between text-xs text-gray-500">
+                      <div className="flex items-center justify-between text-xs text-muted-foreground ml-5">
                         <div className="flex items-center space-x-1">
                           <Clock className="h-3 w-3" />
                           <span>{task.estimatedHours || 0}h</span>
@@ -151,6 +196,18 @@ export function PlanningBoard({ tasks, agents }: PlanningBoardProps) {
                     </motion.div>
                   ))}
                 </AnimatePresence>
+                
+                {/* Drop zone indicator */}
+                {dragOverColumn === column.id && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="border-2 border-dashed border-primary rounded-lg p-4 text-center"
+                  >
+                    <Plus className="h-6 w-6 text-primary mx-auto mb-2" />
+                    <p className="text-sm text-primary">Drop task here</p>
+                  </motion.div>
+                )}
               </div>
             </div>
           </div>
@@ -172,7 +229,7 @@ export function PlanningBoard({ tasks, agents }: PlanningBoardProps) {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: index * 0.1 }}
-            className="flex items-center space-x-4 p-4 bg-white border rounded-lg"
+            className="flex items-center space-x-4 p-4 bg-card border rounded-lg"
           >
             <div className="flex-shrink-0">
               <div className={cn(
@@ -185,8 +242,8 @@ export function PlanningBoard({ tasks, agents }: PlanningBoardProps) {
             </div>
             
             <div className="flex-1 min-w-0">
-              <h4 className="text-sm font-medium text-gray-900">{task.title}</h4>
-              <p className="text-xs text-gray-500">{task.description}</p>
+              <h4 className="text-sm font-medium text-foreground">{task.title}</h4>
+              <p className="text-xs text-muted-foreground">{task.description}</p>
             </div>
 
             <div className="flex items-center space-x-4">
@@ -196,14 +253,14 @@ export function PlanningBoard({ tasks, agents }: PlanningBoardProps) {
               
               {task.agentId && (
                 <div className="flex items-center space-x-1">
-                  <Users className="h-3 w-3 text-gray-400" />
-                  <span className="text-xs text-gray-600">
+                  <Users className="h-3 w-3 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">
                     {agents.find(a => a.id === task.agentId)?.name}
                   </span>
                 </div>
               )}
 
-              <div className="text-xs text-gray-500">
+              <div className="text-xs text-muted-foreground">
                 {task.estimatedHours || 0}h
               </div>
             </div>
@@ -216,7 +273,7 @@ export function PlanningBoard({ tasks, agents }: PlanningBoardProps) {
   const renderDependencyView = () => {
     return (
       <div className="relative">
-        <svg className="w-full h-96 border rounded-lg bg-gray-50">
+        <svg className="w-full h-96 border rounded-lg bg-muted/20">
           {taskNodes.map((node) => (
             <g key={node.id}>
               {/* Dependencies */}
@@ -231,7 +288,7 @@ export function PlanningBoard({ tasks, agents }: PlanningBoardProps) {
                     y1={depNode.y + 25}
                     x2={node.x + 75}
                     y2={node.y + 25}
-                    stroke="#e5e7eb"
+                    stroke="hsl(var(--muted-foreground))"
                     strokeWidth="2"
                     markerEnd="url(#arrowhead)"
                   />
@@ -245,8 +302,8 @@ export function PlanningBoard({ tasks, agents }: PlanningBoardProps) {
                 width="150"
                 height="50"
                 rx="8"
-                fill="white"
-                stroke="#e5e7eb"
+                fill="hsl(var(--card))"
+                stroke="hsl(var(--border))"
                 strokeWidth="1"
                 className="cursor-pointer hover:shadow-md transition-shadow"
                 onClick={() => setSelectedTask(selectedTask === node.id ? null : node.id)}
@@ -256,7 +313,7 @@ export function PlanningBoard({ tasks, agents }: PlanningBoardProps) {
                 x={node.x + 75}
                 y={node.y + 20}
                 textAnchor="middle"
-                className="text-xs font-medium fill-gray-900"
+                className="text-xs font-medium fill-foreground"
               >
                 {node.task.title.length > 20 ? node.task.title.substring(0, 20) + '...' : node.task.title}
               </text>
@@ -265,7 +322,7 @@ export function PlanningBoard({ tasks, agents }: PlanningBoardProps) {
                 x={node.x + 75}
                 y={node.y + 35}
                 textAnchor="middle"
-                className="text-xs fill-gray-500"
+                className="text-xs fill-muted-foreground"
               >
                 {node.task.status}
               </text>
@@ -282,7 +339,7 @@ export function PlanningBoard({ tasks, agents }: PlanningBoardProps) {
               refY="3.5"
               orient="auto"
             >
-              <polygon points="0 0, 10 3.5, 0 7" fill="#e5e7eb" />
+              <polygon points="0 0, 10 3.5, 0 7" fill="hsl(var(--muted-foreground))" />
             </marker>
           </defs>
         </svg>
@@ -390,7 +447,7 @@ export function PlanningBoard({ tasks, agents }: PlanningBoardProps) {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="fixed bottom-4 right-4 w-80 bg-white border rounded-lg shadow-lg p-4 z-50"
+          className="fixed bottom-4 right-4 w-80 bg-card border rounded-lg shadow-lg p-4 z-50"
         >
           <div className="flex items-center justify-between mb-2">
             <h3 className="font-medium">Task Details</h3>
@@ -410,7 +467,7 @@ export function PlanningBoard({ tasks, agents }: PlanningBoardProps) {
             return (
               <div className="space-y-2">
                 <h4 className="font-medium">{task.title}</h4>
-                <p className="text-sm text-gray-600">{task.description}</p>
+                <p className="text-sm text-muted-foreground">{task.description}</p>
                 <div className="flex items-center space-x-2">
                   <Badge className={cn("text-xs", getStatusColor(task.status))}>
                     {task.status}
@@ -421,8 +478,8 @@ export function PlanningBoard({ tasks, agents }: PlanningBoardProps) {
                 </div>
                 {task.agentId && (
                   <div className="flex items-center space-x-2">
-                    <Users className="h-3 w-3 text-gray-400" />
-                    <span className="text-xs text-gray-600">
+                    <Users className="h-3 w-3 text-muted-foreground" />
+                    <span className="text-xs text-muted-foreground">
                       {agents.find(a => a.id === task.agentId)?.name}
                     </span>
                   </div>
